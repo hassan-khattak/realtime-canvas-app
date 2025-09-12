@@ -22,11 +22,6 @@ function App() {
       setRectangles(initialRectangles);
     });
 
-    // Handle new rectangle added by any client
-    newSocket.on('rectangle:add', (rectangle: Rectangle) => {
-      addRectangle(rectangle);
-    });
-
     // Handle rectangle moved by another client
     newSocket.on('rectangle:move', (data: { id: string; x: number; y: number }) => {
       updateRectanglePosition(data.id, data.x, data.y);
