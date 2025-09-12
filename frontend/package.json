@@ -4,15 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "build:prod": "VITE_NODE_ENV=production vite build"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "dotenv": "^17.2.2",
     "konva": "^10.0.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -21,6 +23,7 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@types/dotenv": "^6.1.1",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.2",

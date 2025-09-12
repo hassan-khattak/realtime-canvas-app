@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import Canvas from './components/Canvas';
 import { useCanvasStore } from './stores/canvasStore';
 import { Rectangle, ServerToClientEvents, ClientToServerEvents } from './types';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 function App() {
   const [socket, setSocket] = useState<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
@@ -12,7 +14,7 @@ function App() {
   useEffect(() => {
     
     // Initialize socket connection
-    const newSocket: Socket<ServerToClientEvents, ClientToServerEvents> = io('http://localhost:3001');
+    const newSocket: Socket<ServerToClientEvents, ClientToServerEvents> = io(API_URL);
     setSocket(newSocket);
 
     // Handle initial rectangles load
