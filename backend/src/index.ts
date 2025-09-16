@@ -45,8 +45,8 @@ io.on('connection', (socket) => {
   socket.on('rectangle:add', (rectangle) => {
     console.log('Received rectangle:add from', socket.id, rectangle);
     rectangles.push(rectangle);
-    // Broadcast to all other clients
-    socket.broadcast.emit('rectangle:add', rectangle);
+    // Emit to all clients including the sender to establish a single source of truth
+    io.emit('rectangle:add', rectangle);
   });
 
   // Handle rectangle moved by client

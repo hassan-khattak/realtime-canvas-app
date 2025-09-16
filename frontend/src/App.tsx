@@ -1,81 +1,54 @@
-import { useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { useEffect, useMemo } from 'react';
+import { Socket } from 'socket.io-client';
 import Canvas from './components/Canvas';
 import { useCanvasStore } from './stores/canvasStore';
 import { Rectangle, ServerToClientEvents, ClientToServerEvents } from './types';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { getSocket } from './socket';
 
 function App() {
-  const [socket, setSocket] = useState<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
+  const socket: Socket<ServerToClientEvents, ClientToServerEvents> = useMemo(() => getSocket(), []);
   const { rectangles, addRectangle, updateRectanglePosition, setRectangles } = useCanvasStore();
-  const [localRectangleIds, setLocalRectangleIds] = useState<Set<string>>(new Set()); // Add this state to track rectangles we've already added locally
 
   useEffect(() => {
-    
-    // Initialize socket connection
-    const newSocket: Socket<ServerToClientEvents, ClientToServerEvents> = io(API_URL);
-    setSocket(newSocket);
-
-    // Handle initial rectangles load
-    newSocket.on('rectangles:init', (initialRectangles: Rectangle[]) => {
+    socket.on('rectangles:init', (initialRectangles: Rectangle[]) => {
       setRectangles(initialRectangles);
     });
 
-    // Handle rectangle moved by another client
-    newSocket.on('rectangle:move', (data: { id: string; x: number; y: number }) => {
+    socket.on('rectangle:move', (data: { id: string; x: number; y: number }) => {
       updateRectanglePosition(data.id, data.x, data.y);
     });
 
-    // Clean up on component unmount
     return () => {
-      newSocket.close();
+      socket.off('rectangles:init');
+      socket.off('rectangle:move');
     };
-  }, [addRectangle, updateRectanglePosition, setRectangles]);
+  }, [socket, setRectangles, updateRectanglePosition]);
  
   useEffect(() => {
-    if (!socket) return;
-    
     socket.on('rectangle:add', (rectangle: Rectangle) => {
-      // Only add if this rectangle wasn't created by this client
-      if (!localRectangleIds.has(rectangle.id)) {
-        console.log('Received new rectangle from other client:', rectangle);
-        addRectangle(rectangle);
-      }
+      addRectangle(rectangle);
     });
-    
     return () => {
       socket.off('rectangle:add');
     };
-  }, [socket, addRectangle, localRectangleIds]);
+  }, [socket, addRectangle]);
 
   const handleAddRectangle = () => {
-    if (socket) {
-      const newRect: Rectangle = {
-        id: Math.random().toString(36).substr(2, 9),
-        x: Math.random() * 400,
-        y: Math.random() * 400,
-        width: 50 + Math.random() * 100,
-        height: 50 + Math.random() * 100,
-        fill: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`
-      };
-      
-      socket.emit('rectangle:add', newRect);
-      
-      // Add to local tracking
-      setLocalRectangleIds(prev => new Set(prev).add(newRect.id));
-      
-      // Add locally for immediate feedback
-      addRectangle(newRect);
-    }
+    const newRect: Rectangle = {
+      id: Math.random().toString(36).substr(2, 9),
+      x: Math.random() * 400,
+      y: Math.random() * 400,
+      width: 50 + Math.random() * 100,
+      height: 50 + Math.random() * 100,
+      fill: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`
+    };
+
+    socket.emit('rectangle:add', newRect);
   };
 
   const handleDragMove = (id: string, x: number, y: number) => {
-    if (socket) {
-      socket.emit('rectangle:move', { id, x, y });
-      // Update locally for immediate feedback
-      updateRectanglePosition(id, x, y);
-    }
+    socket.emit('rectangle:move', { id, x, y });
+    updateRectanglePosition(id, x, y);
   };
 
   return (
@@ -93,7 +66,7 @@ function App() {
         </span>
       </div>
       <div className="flex-1">
-        {socket && <Canvas onDragMove={handleDragMove} socket={socket} />}
+        <Canvas onDragMove={handleDragMove} />
       </div>
     </div>
   );

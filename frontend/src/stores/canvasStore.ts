@@ -11,7 +11,9 @@ interface CanvasState {
 export const useCanvasStore = create<CanvasState>((set) => ({
   rectangles: [],
   addRectangle: (rectangle) => set((state) => ({ 
-    rectangles: [...state.rectangles, rectangle] 
+    rectangles: state.rectangles.some(r => r.id === rectangle.id)
+      ? state.rectangles
+      : [...state.rectangles, rectangle] 
   })),
   updateRectanglePosition: (id, x, y) => set((state) => ({
     rectangles: state.rectangles.map(rect => 

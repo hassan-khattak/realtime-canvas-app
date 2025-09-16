@@ -1,15 +1,12 @@
 import React from 'react';
 import { Stage, Layer, Rect } from 'react-konva';
 import { useCanvasStore } from '../stores/canvasStore';
-import { Socket } from 'socket.io-client';
-import { ClientToServerEvents, ServerToClientEvents } from '../types';
 
 interface CanvasProps {
   onDragMove: (id: string, x: number, y: number) => void;
-  socket: Socket<ServerToClientEvents, ClientToServerEvents>;
 }
 
-const Canvas: React.FC<CanvasProps> = ({ onDragMove, socket }) => {
+const Canvas: React.FC<CanvasProps> = ({ onDragMove }) => {
   const rectangles = useCanvasStore((state) => state.rectangles);
   
   console.log('Canvas rendering with rectangles:', rectangles);
